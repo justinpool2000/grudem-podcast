@@ -1,0 +1,70 @@
+name: Calculate audio storage
+
+on:
+  push:
+    paths:
+      - '.github/workflows/calc-sizes.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  calculate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Calculate MP3 sizes
+        shell: python
+        run: |
+          import re, subprocess, json, pathlib, time
+          feed = pathlib.Path("feed.xml").read_text()
+          urls = re.findall(r'<enclosure url="([^"]+)"', feed)
+          rows = []
+          total = 0
+          missing = []
+          for i, url in enumerate(urls, 1):
+              # Ask for a one-byte range; Content-Range reliably exposes total file size.
+              cmd = ["curl","-sS","-L","--retry","2","--connect-timeout","10","--max-time","30",
+                     "-A","Mozilla/5.0","-r","0-0","-D","-","-o","/dev/null",url]
+              p = subprocess.run(cmd, capture_output=True, text=True)
+              headers = p.stdout.replace("\r","")
+              size = None
+              m = re.findall(r'(?im)^content-range:\s*bytes\s+\d+-\d+/(\d+)\s*$', headers)
+              if m:
+                  size = int(m[-1])
+              if size is None:
+                  m = re.findall(r'(?im)^content-length:\s*(\d+)\s*$', headers)
+                  if m:
+                      # For a 206 response Content-Length may be 1, so only accept > 1.
+                      vals = [int(x) for x in m]
+                      vals = [x for x in vals if x > 1]
+                      if vals:
+                          size = vals[-1]
+              if size is None:
+                  missing.append({"index": i, "url": url, "stderr": p.stderr[-300:]})
+              else:
+                  total += size
+                  rows.append({"index": i, "bytes": size, "url": url})
+              print(i, size, url, flush=True)
+          report = {
+              "episode_count": len(urls),
+              "resolved_count": len(rows),
+              "missing_count": len(missing),
+              "total_bytes": total,
+              "total_GB_decimal": round(total/1_000_000_000, 3),
+              "total_GiB_binary": round(total/(1024**3), 3),
+              "average_MB_decimal": round((total/max(len(rows),1))/1_000_000, 2),
+              "smallest_MB_decimal": round(min([r["bytes"] for r in rows], default=0)/1_000_000, 2),
+              "largest_MB_decimal": round(max([r["bytes"] for r in rows], default=0)/1_000_000, 2),
+              "missing": missing
+          }
+          pathlib.Path("size-report.json").write_text(json.dumps(report, indent=2))
+      - name: Commit size report
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add size-report.json
+          git commit -m "Calculate podcast audio storage" || exit 0
+          git push
