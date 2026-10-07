@@ -11,6 +11,12 @@
     <itunes:type>serial</itunes:type>
     <itunes:block>Yes</itunes:block>
     <itunes:category text="Religion &amp; Spirituality" />
+    <itunes:image href="https://justinpool2000.github.io/grudem-podcast/grudem-cover.jpg" />
+    <image>
+      <url>https://justinpool2000.github.io/grudem-podcast/grudem-cover.jpg</url>
+      <title>Wayne Grudem - Systematic Theology (Complete Audio Series)</title>
+      <link>https://www.waynegrudem.com/category/audio/systematic-theology</link>
+    </image>
     <item>
       <title>Chapter 01: Introduction to Systematic Theology</title>
       <description>Chapter 01: Introduction to Systematic Theology. Original audio hosted by WayneGrudem.com.</description>
