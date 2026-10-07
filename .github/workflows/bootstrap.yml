@@ -1,0 +1,47 @@
+name: Publish podcast feed
+
+on:
+  push:
+    paths:
+      - '.github/workflows/bootstrap.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Create podcast files
+        shell: bash
+        run: |
+          echo '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' | base64 -d | gunzip > feed.xml
+          cat > index.html <<'EOF'
+          <!doctype html>
+          <html lang="en">
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wayne Grudem - Systematic Theology Feed</title></head>
+          <body>
+          <h1>Wayne Grudem - Systematic Theology</h1>
+          <p>Personal-use RSS wrapper for the publicly hosted Systematic Theology audio archive.</p>
+          <p><a href="feed.xml">RSS Feed</a></p>
+          <p>Audio files remain hosted by WayneGrudem.com.</p>
+          </body></html>
+          EOF
+          touch .nojekyll
+          cat > README.md <<'EOF'
+          # Grudem Systematic Theology podcast feed
+
+          A personal-use RSS wrapper for Wayne Grudem's publicly hosted Systematic Theology audio archive.
+
+          Audio files remain hosted by WayneGrudem.com. The feed organizes the available recordings into sequential podcast episodes for easier offline listening.
+          EOF
+      - name: Commit podcast files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add feed.xml index.html .nojekyll README.md
+          git commit -m "Publish podcast feed" || exit 0
+          git push
